@@ -1,0 +1,76 @@
+version: '2.1'
+services:
+  trudesk:
+    image: 'polonel/trudesk:1'
+    restart: always
+    ports:
+      - '8118:8118'
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    environment:
+      - NODE_ENV=production
+      - TRUDESK_DOCKER=true
+      - TD_MONGODB_SERVER=mongo
+      - TD_MONGODB_DATABASE=trudesk
+      - USE_XFORWARDIP=true
+      - SERVICE_FQDN_TRUEDESK
+      - SERVICE_FQDN_TRUEDESK_8118
+    volumes:
+      - 'trudesk_uploads:/usr/src/trudesk/public/uploads'
+      - 'trudesk_backups:/usr/src/trudesk/backups'
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - '-f'
+        - 'http://127.0.0.1:8118'
+      interval: 2s
+      timeout: 10s
+      retries: 15
+  mongo:
+    image: 'mongo:5.0-focal'
+    restart: always
+    ports:
+      - '27017:27017'
+    volumes:
+      - 'mongo:/var/lib/mongo'
+      - 'mongo_data:/data/db:rw'
+    healthcheck:
+      test: "echo 'db.stats().ok' | mongo localhost:27017/test --quiet"
+      interval: 2s
+      timeout: 10s
+      retries: 15
+  elasticsearch:
+    image: 'elasticsearch:8.0.0'
+    restart: always
+    environment:
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+    mem_limit: 1073741824
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - '9200:9200'
+      - '9300:9300'
+    volumes:
+      - 'elasticsearch:/usr/share/elasticsearch/data'
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - '-f'
+        - 'http://127.0.0.1:9200'
+      interval: 2s
+      timeout: 2s
+      retries: 10
+volumes:
+  trudesk_uploads: null
+  trudesk_backups: null
+  mongo: null
+  mongo_data: null
+  elasticsearch: null
