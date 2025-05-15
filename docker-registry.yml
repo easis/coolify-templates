@@ -3,6 +3,9 @@
 # Es decir, al crear un contenedor con esta imagen hay que entrar a "Persistent Storage", buscar dichos archivos
 # y editar el contenido, separando los usuarios por saltos de línea en lugar de espacios.
 
+# El par usuario:contraseña se genera con este comando:
+#   $ docker run --rm --entrypoint htpasswd httpd:2 -Bbn usuario contraseña
+
 services:
   registry:
     image: registry:2.8.2
@@ -70,21 +73,18 @@ services:
       - CATALOG_ELEMENTS_LIMIT=1000
       - TAGLIST_PAGE_SIZE=100
     volumes:
-      # easis -> ErikEnttia0799
-      # write -> registry
+      # Usuario: write, Contraseña: registry
       - type: bind
         source: ./auth/registry.password
         target: /etc/nginx/auth/write.htpasswd
         isDirectory: false
         content: >-
-          easis:$2y$05$S7o48kegSEsfbxoZxqrhmu0.Stm2jdR7q1xQ/Ur3VSKvAv7WUtcVq
           write:$2y$05$aqLmS1hXojRnubpSN4aVDeZ8wLhJtmQr4v0NiZl4KHUHXhDVnyoQm
       - type: bind
         source: ./auth/registry.password
         target: /etc/nginx/auth/read.htpasswd
         isDirectory: false
         content: >-
-          easis:$2y$05$S7o48kegSEsfbxoZxqrhmu0.Stm2jdR7q1xQ/Ur3VSKvAv7WUtcVq
           write:$2y$05$aqLmS1hXojRnubpSN4aVDeZ8wLhJtmQr4v0NiZl4KHUHXhDVnyoQm
       - type: bind
         source: ./nginx.conf
